@@ -2,8 +2,12 @@
 
 const playlist = [
   { title: "just your doll.", artist: "Snow Strippers", src: "media/song1.mp4", cover: "", lrc: "media/song1.lrc" },
-  { title: "Song 2", artist: "Artist 2", src: "media/song2.mp4", cover: "", lrc: "" },
-  { title: "Song 3", artist: "Artist 3", src: "media/song3.mp4", cover: "", lrc: "" }
+  { title: "addiction(slowed)", artist: "LONOWN", src: "media/song2.mp4", cover: "", lrc: "media/song2.lrc" },
+  { title: "the kill 2", artist: "lex amarni", src: "media/song3.mp4", cover: "", lrc: "media/song3.lrc" },
+  { title: "mr popular", artist: "predayed", src: "media/song4.mp4", cover: "", lrc: "media/song4.lrc" },
+  { title: "type london", artist: "ONDA ANDAR", src: "media/song5.mp4", cover: "", lrc: "media/song5.lrc" },
+  { title: "tesla", artist: "Fixupboy", src: "media/song6.mp4", cover: "", lrc: "media/song6.lrc" },
+  { title: "Queen St", artist: "twentythree", src: "media/song7.mp4", cover: "", lrc: "media/song7.lrc" }
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -24,9 +28,9 @@ const nowArtist = $("nowArtist");
 
 let index = 0;
 let shuffleOn = false;
-let repeatMode = "off"; // off | all | one
+let repeatMode = "off"; 
 let seeking = false;
-const trail = []; // tracks played before the current one
+const trail = []; 
 
 
 function fmt(s) {
