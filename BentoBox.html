@@ -22,7 +22,7 @@
       <div class="col-12 col-lg-3 order-2 order-lg-1 p-1">
         <div class="card playlist-card h-100">
           <div class="pl-header">
-            <div class="pl-cover"><i class="bi bi-music-note-beamed"></i></div>
+            <div class="pl-cover"><img src="media/playlist.jfif" alt="Playlist cover"></div>
             <div class="pl-meta">
               <span class="pl-label">PLAYLIST</span>
               <h1 class="pl-title">playlist so good even a devil may cry</h1>
@@ -107,11 +107,15 @@
         </div>
       </div>
 
-      <!-- right box small, tall, small -->
+            <!-- right box small, tall, small -->
       <div class="col-12 col-lg-3 order-3 d-flex flex-column">
+
         <div class="p-1">
-          <div class="card p-1"></div>
+          <div class="card image-card">
+            <img src="media/dante.jpg" alt="">
+          </div>
         </div>
+
         <div class="p-1 flex-grow-1 d-flex">
           <div class="card lyrics-card w-100">
             <div class="lyrics-scroll empty" id="lyrics">
@@ -119,13 +123,43 @@
             </div>
           </div>
         </div>
+
         <div class="p-1">
-          <div class="card p-1"></div>
+          <div class="card profile-card">
+            <div class="pf-top">
+              <div class="pf-avatar">
+                <span>C</span>
+                <img src="media/profile.jpg" alt="" onerror="this.remove()">
+              </div>
+              <div class="pf-text">
+                <span class="pf-label">MADE BY</span>
+                <div class="pf-name">Chaste Lomibao</div>
+                <div class="pf-handle">@slindder</div>
+              </div>
+            </div>
+            <div class="pf-links">
+              <a href="https://instagram.com/slindder" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a>
+              <a href="https://github.com/slindder" target="_blank" rel="noopener" title="GitHub"><i class="bi bi-github"></i></a>
+              <a href="https://tiktok.com/@slindder" target="_blank" rel="noopener" title="TikTok"><i class="bi bi-tiktok"></i></a>
+            </div>
+          </div>
         </div>
+
       </div>
 
     </div>
   </div>
+
+<div class="intro" id="intro">
+  <div class="intro-box">
+    <video id="introVideo" playsinline preload="auto"></video>
+    <button class="intro-start" id="introStart">
+      <i class="bi bi-play-circle-fill"></i>
+      <span>Tap to enter</span>
+    </button>
+    <button class="intro-skip" id="introSkip">Skip intro <i class="bi bi-chevron-right"></i></button>
+  </div>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"

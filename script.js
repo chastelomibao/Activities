@@ -42,8 +42,9 @@ function fmt(s) {
 
 function coverBg(track, i) {
   if (track.cover) return 'url("' + track.cover + '") center / cover no-repeat';
-  const h = (i * 47 + 330) % 360;
-  return "linear-gradient(135deg, hsl(" + h + " 85% 62%), hsl(" + ((h + 55) % 360) + " 80% 52%))";
+  const h = 345 + (i * 9) % 25;
+  const l = 18 + (i % 3) * 6;
+  return "linear-gradient(135deg, hsl(" + h + " 65% " + (l + 8) + "%), hsl(" + (h + 8) + " 70% " + l + "%))";
 }
 
 function setFill(el) {
@@ -407,3 +408,34 @@ buildPlaylist();
 video.volume = volume.value;
 setFill(volume);
 loadTrack(0, false);
+// ---------- intro ----------
+// Put your intro file in media/. Set to "" to disable the intro.
+const INTRO_SRC = "media/intro.mp4";
+
+(function setupIntro() {
+  const intro = $("intro");
+  const introVideo = $("introVideo");
+  let finished = false;
+
+  function finishIntro() {
+    if (finished) return;
+    finished = true;
+    introVideo.pause();
+    introVideo.removeAttribute("src");
+    introVideo.load();
+    intro.classList.add("hide");
+    setTimeout(() => intro.remove(), 700);
+    video.play().catch(() => { }); // start song 1 (already loaded, lyrics included)
+  }
+
+  if (!INTRO_SRC) { intro.remove(); return; }
+
+  $("introStart").addEventListener("click", () => {
+    introVideo.src = INTRO_SRC;
+    introVideo.play().then(() => intro.classList.add("playing")).catch(finishIntro);
+  });
+
+  introVideo.addEventListener("ended", finishIntro);
+  introVideo.addEventListener("error", finishIntro); // missing file: go straight to the song
+  $("introSkip").addEventListener("click", finishIntro);
+})();
