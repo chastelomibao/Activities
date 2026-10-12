@@ -43,7 +43,6 @@ button:focus-visible,
   outline-offset: 2px;
 }
 
-/* ---------- playlist ---------- */
 .playlist-card {
   display: flex;
   flex-direction: column;
@@ -246,7 +245,6 @@ body.playing .eq i {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- main video ---------- */
 .video-card {
   position: relative;
   overflow: hidden;
@@ -293,7 +291,6 @@ body.playing .eq i {
   display: none;
 }
 
-/* ---------- half disc on the seam ---------- */
 .controls-wrap {
   position: relative;
 }
@@ -338,7 +335,6 @@ body.playing .disc {
   }
 }
 
-/* ---------- controls ---------- */
 .controls-card {
   min-height: 0;
   padding: 12px 18px 14px;
@@ -502,7 +498,6 @@ body.playing .disc {
   transform: scale(.97);
 }
 
-/* progress + volume sliders */
 .slider {
   --h: 4px;
   -webkit-appearance: none;
@@ -572,7 +567,6 @@ body.playing .disc {
   opacity: 1;
 }
 
-/* narrow controls card (phones, small windows): stack the rows */
 @container ctl (max-width: 600px) {
   .bar-row {
     grid-template-columns: 1fr auto;
@@ -583,7 +577,6 @@ body.playing .disc {
   }
 }
 
-/* ---------- lyrics ---------- */
 .lyrics-card {
   position: relative;
   overflow: hidden;
@@ -614,7 +607,6 @@ body.playing .disc {
   display: none;
 }
 
-/* spacers so the first and last lines can sit in the middle */
 .lyrics-scroll::before,
 .lyrics-scroll::after {
   content: "";
@@ -667,7 +659,6 @@ body.playing .disc {
   text-align: center;
 }
 
-/* ---------- image card (top right) ---------- */
 .image-card {
   overflow: hidden;
   padding: 0;
@@ -681,7 +672,6 @@ body.playing .disc {
   display: block;
 }
 
-/* ---------- profile card (bottom right) ---------- */
 .profile-card {
   justify-content: center;
   gap: 14px;
@@ -772,7 +762,6 @@ body.playing .disc {
   transform: translateY(-2px);
 }
 
-/* ---------- intro overlay (big centered box) ---------- */
 .intro {
   position: fixed;
   inset: 0;
@@ -864,7 +853,6 @@ body.playing .disc {
   background: rgba(255, 255, 255, .15);
 }
 
-/* ---------- tablet and phone: stack the tiles and let the page scroll ---------- */
 @media (max-width: 991.98px) {
   .bento-row {
     height: auto;

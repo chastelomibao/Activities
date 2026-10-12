@@ -1,5 +1,3 @@
-// ===== PLAYLIST =====
-
 const playlist = [
   { title: "just your doll.", artist: "Snow Strippers", src: "media/song1.mp4", cover: "", lrc: "media/song1.lrc" },
   { title: "addiction(slowed)", artist: "LONOWN", src: "media/song2.mp4", cover: "", lrc: "media/song2.lrc" },
@@ -57,7 +55,6 @@ function setRowDuration(i, seconds) {
   if (el) el.textContent = fmt(seconds);
 }
 
-// playlist panel 
 function buildPlaylist() {
   $("plCount").textContent = playlist.length + (playlist.length === 1 ? " song" : " songs");
 
@@ -88,7 +85,6 @@ function buildPlaylist() {
     });
     plList.appendChild(li);
 
-    // show durations
     const probe = document.createElement("video");
     probe.preload = "metadata";
     probe.addEventListener("loadedmetadata", () => {
@@ -106,7 +102,6 @@ function setActiveRow() {
   if (row) row.scrollIntoView({ block: "nearest" });
 }
 
-// loading / navigation
 function loadTrack(i, autoplay) {
   index = (i + playlist.length) % playlist.length;
   const t = playlist[index];
@@ -176,7 +171,6 @@ function skip(sec) {
   video.currentTime = Math.min(Math.max(video.currentTime + sec, 0), end);
 }
 
-// buttons 
 playBtn.addEventListener("click", togglePlay);
 video.addEventListener("click", togglePlay);
 $("nextBtn").addEventListener("click", () => goNext(!video.paused));
@@ -197,7 +191,6 @@ repeatBtn.addEventListener("click", () => {
   repeatBtn.title = "Repeat: " + repeatMode;
 });
 
-// video events
 video.addEventListener("play", () => {
   document.body.classList.add("playing");
   playBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
@@ -229,7 +222,6 @@ video.addEventListener("ended", () => {
   goNext(true);
 });
 
-// seek bar 
 video.addEventListener("loadedmetadata", () => {
   seek.max = video.duration;
   durTime.textContent = fmt(video.duration);
@@ -257,7 +249,6 @@ seek.addEventListener("change", () => {
   seeking = false;
 });
 
-// volume
 function updateVolIcon() {
   const icon = (video.muted || video.volume === 0) ? "bi-volume-mute-fill"
     : video.volume < 0.5 ? "bi-volume-down-fill" : "bi-volume-up-fill";
@@ -276,7 +267,6 @@ muteBtn.addEventListener("click", () => {
   updateVolIcon();
 });
 
-// media-key controls
 if ("mediaSession" in navigator) {
   const handlers = {
     play: () => video.play(),
@@ -291,7 +281,6 @@ if ("mediaSession" in navigator) {
   }
 }
 
-// synced lyrics
 const lyricsEl = $("lyrics");
 let lyricLines = []; // { time, el }
 let lyricIdx = -1;
