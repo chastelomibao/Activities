@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AniKuro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!--Navbar-->
+  <nav class="navbar navbar-expand-md navbar-dark vault-nav sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#home">ANIKURO</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+        aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#anime-list">Anime List</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!--Hero-->
+  <header id="home" class="hero d-flex align-items-center text-white text-center">
+    <div class="container">
+      <h1 class="fw-bold hero-title">ANIKURO</h1>
+      <p class="fs-5 opacity-75 mb-4">Your shelf of series worth watching. Pick a poster to see the story.</p>
+      <a href="#anime-list" class="btn btn-vault btn-lg px-5">Browse Anime</a>
+    </div>
+  </header>
+
+  <!--Controls-->
+  <section id="anime-list" class="container py-5">
+    <div class="row g-3 align-items-center mb-4">
+      <div class="col-lg-8">
+        <div class="d-flex flex-wrap gap-2" id="filter-buttons"></div>
+      </div>
+      <div class="col-lg-4">
+        <input type="search" id="search" class="form-control search-box" placeholder="Search a title...">
+      </div>
+    </div>
+
+    <!--Grid-->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="anime-grid"></div>
+    <p id="empty" class="text-center text-white-50 mt-5 d-none">No anime found. Try another title or genre.</p>
+  </section>
+
+  <!--Modal-->
+  <div class="modal fade" id="animeModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content about-modal text-white">
+        <div class="modal-header border-0 pb-0">
+          <h2 class="modal-title fw-bold fs-4" id="modalTitle"></h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-4">
+            <div class="col-md-5"><img id="modalImg" src="" alt="" class="img-fluid rounded poster-img"></div>
+            <div class="col-md-7">
+              <div id="modalBadges" class="mb-3"></div>
+              <p class="mb-1"><strong>Year:</strong> <span id="modalYear"></span></p>
+              <p class="mb-1"><strong>Episodes:</strong> <span id="modalEps"></span></p>
+              <p class="mb-1"><strong>Studio:</strong> <span id="modalStudio"></span></p>
+              <p class="mb-1"><strong>Status:</strong> <span id="modalStatus"></span></p>
+              <p class="mb-3"><strong>Rating:</strong> <span class="stars" id="modalRating"></span></p>
+              <h3 class="fs-6 fw-semibold">Synopsis</h3>
+              <p class="opacity-75 mb-0" id="modalSynopsis"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--About-->
+  <section id="about" class="container text-center text-white py-5">
+    <h2 class="fw-bold">About</h2>
+    <p class="opacity-75 mx-auto" style="max-width: 560px;">Anime Vault is a small catalog built with Bootstrap 5 and
+      JavaScript. Every card on this page is generated from a JSON array.</p>
+  </section>
+
+  <!--Footer-->
+  <footer class="vault-footer text-center text-white py-4">
+    <p class="fw-semibold mb-1">Watch more. Skip less.</p>
+    <p class="opacity-50 mb-0" style="font-size: 13px;">Designed by: Chastepogi123</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+
+  <script> // json
+    const animeData = [
+      { title: "Demon Slayer", genre: ["Action", "Fantasy"], year: 2019, episodes: 55, studio: "ufotable", rating: 4.7, status: "Ongoing", synopsis: "After his family is slaughtered and his younger sister turns into a demon, Tanjiro Kamado joins the Demon Slayer Corps to find a cure and avenge his family.", image: "img/demon-slayer.jpg" },
+      { title: "Jujutsu Kaisen", genre: ["Action", "Fantasy"], year: 2020, episodes: 47, studio: "MAPPA", rating: 4.6, status: "Ongoing", synopsis: "Yuji Itadori swallows a cursed finger to save his friends and becomes the host of a powerful curse, pulling him into the world of jujutsu sorcerers.", image: "img/jujutsu-kaisen.jpg" },
+      { title: "Attack on Titan", genre: ["Action", "Drama"], year: 2013, episodes: 94, studio: "Wit Studio / MAPPA", rating: 4.9, status: "Completed", synopsis: "Humanity lives behind giant walls to hide from man-eating Titans. When the walls fall, Eren Yeager vows to wipe them all out.", image: "img/attack-on-titan.jpg" },
+      { title: "One Piece", genre: ["Adventure", "Comedy"], year: 1999, episodes: 1100, studio: "Toei Animation", rating: 4.8, status: "Ongoing", synopsis: "Monkey D. Luffy and his pirate crew sail the Grand Line in search of the legendary treasure known as the One Piece.", image: "img/one-piece.jpg" },
+      { title: "Your Name", genre: ["Romance", "Fantasy"], year: 2016, episodes: 1, studio: "CoMix Wave Films", rating: 4.8, status: "Completed", synopsis: "Two teenagers who have never met begin swapping bodies in their sleep and slowly form a bond that crosses distance and time.", image: "img/your-name.jpg" },
+      { title: "Spy x Family", genre: ["Comedy", "Action"], year: 2022, episodes: 37, studio: "Wit Studio / CloverWorks", rating: 4.6, status: "Ongoing", synopsis: "A spy, an assassin, and a telepath pose as a normal family. None of them knows the others' secrets.", image: "img/spy-x-family.jpg" },
+      { title: "Fullmetal Alchemist: Brotherhood", genre: ["Adventure", "Fantasy"], year: 2009, episodes: 64, studio: "Bones", rating: 4.9, status: "Completed", synopsis: "Brothers Edward and Alphonse Elric use alchemy to try to restore their bodies after a failed attempt to bring their mother back.", image: "img/fmab.jpg" },
+      { title: "Kaguya-sama: Love Is War", genre: ["Romance", "Comedy"], year: 2019, episodes: 37, studio: "A-1 Pictures", rating: 4.7, status: "Completed", synopsis: "Two brilliant student council leaders refuse to confess first, turning every day into a battle of wits to make the other one admit their love.", image: "img/kaguya-sama.jpg" },
+      { title: "Death Note", genre: ["Drama", "Mystery"], year: 2006, episodes: 37, studio: "Madhouse", rating: 4.7, status: "Completed", synopsis: "Light Yagami finds a notebook that kills anyone whose name is written in it. A genius detective known as L sets out to stop him.", image: "img/death-note.jpg" }
+    ];
+
+    const grid = document.getElementById("anime-grid");
+    const filterBox = document.getElementById("filter-buttons");
+    const searchBox = document.getElementById("search");
+    const emptyMsg = document.getElementById("empty");
+    let activeGenre = "All";
+
+    // fallback poster 
+    const fallback = "data:image/svg+xml;utf8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="300" height="420" fill="#2a2a35"/><text x="150" y="215" fill="#888" font-family="sans-serif" font-size="16" text-anchor="middle">No poster</text></svg>');
+
+    function stars(r) {
+      const full = Math.round(r);
+      return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r}</small>`;
+    }
+
+    // filter buttons 
+    const genres = ["All", ...new Set(animeData.flatMap(a => a.genre))];
+    filterBox.innerHTML = genres.map(g =>
+      `<button class="btn btn-filter ${g === "All" ? "active" : ""}" data-genre="${g}">${g}</button>`).join("");
+
+    filterBox.addEventListener("click", e => {
+      if (!e.target.dataset.genre) return;
+      activeGenre = e.target.dataset.genre;
+      filterBox.querySelectorAll(".btn-filter").forEach(b => b.classList.toggle("active", b === e.target));
+      render();
+    });
+    searchBox.addEventListener("input", render);
+
+    function render() {
+      const q = searchBox.value.trim().toLowerCase();
+      let html = "";
+      let count = 0;
+
+      for (let i = 0; i < animeData.length; i++) {
+        const a = animeData[i];
+        const matchGenre = activeGenre === "All" || a.genre.includes(activeGenre);
+        const matchSearch = a.title.toLowerCase().includes(q);
+        if (!matchGenre || !matchSearch) continue;
+        count++;
+
+        html += `
+    <div class="col">
+      <div class="card anime-card h-100" role="button" tabindex="0" data-index="${i}">
+        <div class="poster-wrap">
+          <img src="${a.image}" alt="${a.title} poster" class="poster-img" onerror="this.onerror=null;this.src='${fallback}'">
+        </div>
+        <div class="card-body">
+          <h3 class="anime-title">${a.title}</h3>
+          <div class="mb-2">${a.genre.map(g => `<span class="badge badge-genre">${g}</span>`).join(" ")}</div>
+          <p class="anime-meta mb-1">${a.year} &middot; ${a.episodes} ep</p>
+          <p class="stars mb-0">${stars(a.rating)}</p>
+        </div>
+      </div>
+    </div>`;
+      }
+      grid.innerHTML = html;
+      emptyMsg.classList.toggle("d-none", count > 0);
+    }
+
+    // open modal
+    const modal = new bootstrap.Modal(document.getElementById("animeModal"));
+    function openModal(card) {
+      const a = animeData[card.dataset.index];
+      document.getElementById("modalTitle").textContent = a.title;
+      const img = document.getElementById("modalImg");
+      img.onerror = () => { img.onerror = null; img.src = fallback; };
+      img.src = a.image;
+      img.alt = a.title + " poster";
+      document.getElementById("modalBadges").innerHTML = a.genre.map(g => `<span class="badge badge-genre">${g}</span>`).join(" ");
+      document.getElementById("modalYear").textContent = a.year;
+      document.getElementById("modalEps").textContent = a.episodes;
+      document.getElementById("modalStudio").textContent = a.studio;
+      document.getElementById("modalStatus").textContent = a.status;
+      document.getElementById("modalRating").innerHTML = stars(a.rating);
+      document.getElementById("modalSynopsis").textContent = a.synopsis;
+      modal.show();
+    }
+    grid.addEventListener("click", e => { const c = e.target.closest(".anime-card"); if (c) openModal(c); });
+    grid.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      const c = e.target.closest(".anime-card"); if (c) openModal(c);
+    });
+
+    render();
+  </script>
+</body>
+
+</html>
