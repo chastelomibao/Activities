@@ -13,7 +13,6 @@
 </head>
 
 <body>
-  <!--Navbar-->
   <nav class="navbar navbar-expand-md navbar-dark vault-nav sticky-top">
     <div class="container">
       <a class="navbar-brand fw-bold" href="#home">ANIKURO</a>
@@ -29,7 +28,6 @@
     </div>
   </nav>
 
-  <!--Hero-->
   <header id="home" class="hero d-flex align-items-center text-white text-center">
     <div class="container">
       <h1 class="fw-bold hero-title">ANIKURO</h1>
@@ -38,7 +36,6 @@
     </div>
   </header>
 
-  <!--Controls-->
   <section id="anime-list" class="container py-5">
     <div class="row g-3 align-items-center mb-4">
       <div class="col-lg-8">
@@ -49,12 +46,10 @@
       </div>
     </div>
 
-    <!--Grid-->
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="anime-grid"></div>
     <p id="empty" class="text-center text-white-50 mt-5 d-none">No anime found. Try another title or genre.</p>
   </section>
 
-  <!--Modal-->
   <div class="modal fade" id="animeModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
       <div class="modal-content about-modal text-white">
@@ -81,14 +76,12 @@
     </div>
   </div>
 
-  <!--About-->
   <section id="about" class="container text-center text-white py-5">
     <h2 class="fw-bold">About</h2>
     <p class="opacity-75 mx-auto" style="max-width: 560px;">Anime Vault is a small catalog built with Bootstrap 5 and
       JavaScript. Every card on this page is generated from a JSON array.</p>
   </section>
 
-  <!--Footer-->
   <footer class="vault-footer text-center text-white py-4">
     <p class="fw-semibold mb-1">Watch more. Skip less.</p>
     <p class="opacity-50 mb-0" style="font-size: 13px;">Designed by: Chastepogi123</p>
@@ -117,7 +110,6 @@
     const emptyMsg = document.getElementById("empty");
     let activeGenre = "All";
 
-    // fallback poster 
     const fallback = "data:image/svg+xml;utf8," + encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="300" height="420" fill="#2a2a35"/><text x="150" y="215" fill="#888" font-family="sans-serif" font-size="16" text-anchor="middle">No poster</text></svg>');
 
@@ -125,8 +117,7 @@
       const full = Math.round(r);
       return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r}</small>`;
     }
-
-    // filter buttons 
+    
     const genres = ["All", ...new Set(animeData.flatMap(a => a.genre))];
     filterBox.innerHTML = genres.map(g =>
       `<button class="btn btn-filter ${g === "All" ? "active" : ""}" data-genre="${g}">${g}</button>`).join("");
