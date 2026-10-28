@@ -37,17 +37,32 @@
   </header>
 
   <section id="anime-list" class="container py-5">
-    <div class="row g-3 align-items-center mb-4">
-      <div class="col-lg-8">
-        <div class="d-flex flex-wrap gap-2" id="filter-buttons"></div>
+    <div class="row g-3 align-items-center mb-5">
+      <div class="col-6 col-lg-3">
+        <select id="genreSelect" class="form-select filter-select" aria-label="Filter by genre"></select>
       </div>
-      <div class="col-lg-4">
+      <div class="col-6 col-lg-3">
+        <select id="statusSelect" class="form-select filter-select" aria-label="Filter by status"></select>
+      </div>
+      <div class="col-lg-6">
         <input type="search" id="search" class="form-control search-box" placeholder="Search a title...">
       </div>
     </div>
 
-    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="anime-grid"></div>
-    <p id="empty" class="text-center text-white-50 mt-5 d-none">No anime found. Try another title or genre.</p>
+    <div id="rows"></div>
+
+    <div id="list" class="d-none">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 id="listTitle" class="list-title"></h2>
+        <button id="backBtn" class="btn btn-filter">&lsaquo; Back</button>
+      </div>
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="anime-grid"></div>
+      <div class="text-center mt-5">
+        <button id="loadMore" class="btn btn-vault px-5 d-none">Load more</button>
+      </div>
+    </div>
+
+    <p id="empty" class="text-center text-white-50 mt-5 d-none"></p>
   </section>
 
   <div class="modal fade" id="animeModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
@@ -72,11 +87,11 @@
             </div>
           </div>
 
-          <!--Trailer player-->
           <div id="trailerSection" class="mt-4 d-none">
             <h3 class="fs-6 fw-semibold">Trailer</h3>
             <div class="ratio ratio-16x9">
               <iframe id="modalTrailer" src="" title="Anime trailer" allowfullscreen
+                referrerpolicy="strict-origin-when-cross-origin"
                 allow="autoplay; encrypted-media; picture-in-picture"></iframe>
             </div>
           </div>
@@ -101,48 +116,82 @@
     crossorigin="anonymous"></script>
 
   <script>
-    // apiiiaiaiai
+    // apiaiaia and functions like filters etc
     const API = "https://graphql.anilist.co";
+    const $ = id => document.getElementById(id);
 
-  
-    const QUERY = `
-      query ($search: String, $sort: [MediaSort]) {
-        Page(page: 1, perPage: 24) {
-          media(type: ANIME, search: $search, sort: $sort, isAdult: false) {
-            title { romaji english }
-            genres
-            seasonYear
-            startDate { year }
-            episodes
-            status
-            averageScore
-            description(asHtml: false)
-            coverImage { extraLarge large }
-            studios(isMain: true) { nodes { name } }
-            trailer { id site }
-          }
-        }
-      }`;
+    const rowsBox = $("rows");
+    const listBox = $("list");
+    const grid = $("anime-grid");
+    const listTitle = $("listTitle");
+    const backBtn = $("backBtn");
+    const loadMoreBtn = $("loadMore");
+    const genreSel = $("genreSelect");
+    const statusSel = $("statusSelect");
+    const searchBox = $("search");
+    const emptyMsg = $("empty");
 
-    let animeData = [];
-    let requestId = 0; 
+    const GENRES = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mahou Shoujo", "Mecha",
+      "Music", "Mystery", "Psychological", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"];
 
-    const grid = document.getElementById("anime-grid");
-    const filterBox = document.getElementById("filter-buttons");
-    const searchBox = document.getElementById("search");
-    const emptyMsg = document.getElementById("empty");
-    let activeGenre = "All";
+    const STATUS_OPTIONS = [
+      ["", "All status"], ["RELEASING", "Airing"], ["FINISHED", "Finished"],
+      ["NOT_YET_RELEASED", "Not Yet Aired"], ["CANCELLED", "Cancelled"]
+    ];
+    const STATUS_LABEL = {
+      FINISHED: "Completed", RELEASING: "Ongoing", NOT_YET_RELEASED: "Not yet released",
+      CANCELLED: "Cancelled", HIATUS: "On hiatus"
+    };
+
+    genreSel.innerHTML = `<option value="">All genres</option>` +
+      GENRES.map(g => `<option value="${g}">${g}</option>`).join("");
+    statusSel.innerHTML = STATUS_OPTIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+
+    const now = new Date();
+    const month = now.getMonth();
+    const SEASON = ["WINTER", "SPRING", "SUMMER", "FALL"][month === 11 ? 0 : Math.floor((month + 1) / 3)];
+    const SEASON_YEAR = month === 11 ? now.getFullYear() + 1 : now.getFullYear();
+
+    const ROWS = [
+      { id: "trending", title: "Trending Now", sort: "TRENDING_DESC" },
+      { id: "season", title: "Popular This Season", sort: "POPULARITY_DESC", extra: `season: ${SEASON}, seasonYear: ${SEASON_YEAR},` },
+      { id: "airing", title: "Currently Airing", sort: "POPULARITY_DESC", status: "RELEASING" },
+      { id: "popular", title: "All-Time Popular", sort: "POPULARITY_DESC" },
+      { id: "top", title: "Top Rated", sort: "SCORE_DESC", extra: "popularity_greater: 20000," },
+      { id: "upcoming", title: "Upcoming", sort: "POPULARITY_DESC", status: "NOT_YET_RELEASED" }
+    ];
 
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-    const STATUS = {
-      FINISHED: "Completed",
-      RELEASING: "Ongoing",
-      NOT_YET_RELEASED: "Not yet released",
-      CANCELLED: "Cancelled",
-      HIATUS: "On hiatus"
-    };
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const spinner = `<div class="text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+
+    const fallback = "data:image/svg+xml;utf8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="300" height="420" fill="#2a2a35"/><text x="150" y="215" fill="#888" font-family="sans-serif" font-size="16" text-anchor="middle">No poster</text></svg>');
+
+    function stars(r) {
+      if (r == null) return `<small class="opacity-75">No rating</small>`;
+      const full = Math.round(r);
+      return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r.toFixed(1)}</small>`;
+    }
+
+    // anilist
+    const store = new Map();
+
+    const FIELDS = `
+      id
+      title { romaji english }
+      genres
+      seasonYear
+      startDate { year }
+      episodes
+      status
+      averageScore
+      description(asHtml: false)
+      coverImage { extraLarge large }
+      studios(isMain: true) { nodes { name } }
+      trailer { id site }`;
 
     function mapAnime(a) {
       let trailer = null;
@@ -155,138 +204,260 @@
         .replace(/<[^>]*>/g, "")
         .trim();
 
-      return {
+      const item = {
+        id: a.id,
         title: a.title.english || a.title.romaji,
         genre: a.genres || [],
         year: a.seasonYear ?? a.startDate?.year ?? "?",
         episodes: a.episodes ?? "?",
         studio: a.studios?.nodes?.[0]?.name ?? "Unknown",
         rating: a.averageScore ? a.averageScore / 20 : null, // AniList score is out of 100, stars are out of 5
-        status: STATUS[a.status] || "Unknown",
+        status: STATUS_LABEL[a.status] || "Unknown",
         synopsis: synopsis || "No synopsis available.",
         image: a.coverImage?.extraLarge || a.coverImage?.large || "",
         trailer
       };
+      store.set(item.id, item);
+      return item;
     }
 
-    async function loadAnime(query = "") {
-      const myRequest = ++requestId;
-      grid.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
-      emptyMsg.classList.add("d-none");
+    function mediaArgs(cat, genre, status, search) {
+      const st = status || cat.status;
+      return `type: ANIME, isAdult: false, sort: [${cat.sort}], ${cat.extra || ""}` +
+        (genre ? ` genre: ${JSON.stringify(genre)},` : "") +
+        (st ? ` status: ${st},` : "") +
+        (search ? ` search: ${JSON.stringify(search)},` : "");
+    }
 
-      const variables = query
-        ? { search: query, sort: ["SEARCH_MATCH"] }
-        : { sort: ["POPULARITY_DESC"] };
-
-      let failed = false;
-      let errorText = "";
+    async function gql(query) {
+      let lastErr;
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const res = await fetch(API, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body: JSON.stringify({ query: QUERY, variables })
+            body: JSON.stringify({ query })
           });
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const json = await res.json();
-          if (myRequest !== requestId) return; // a newer search replaced this one
-          animeData = json.data.Page.media.map(mapAnime);
-          failed = false;
-          break;
+          const json = await res.json().catch(() => null);
+          if (!res.ok || !json || json.errors) {
+            throw new Error(json?.errors?.[0]?.message || "HTTP " + res.status);
+          }
+          return json.data;
         } catch (err) {
-          if (myRequest !== requestId) return;
           console.error(err);
-          animeData = [];
-          failed = true;
-          errorText = err.message;
-          if (attempt === 1) await new Promise(r => setTimeout(r, 2000));
+          lastErr = err;
+          if (attempt === 1) await sleep(2000);
         }
       }
-
-      emptyMsg.textContent = failed
-        ? `Couldn't load anime (${errorText}). Wait a few seconds and try again.`
-        : "No anime found. Try another title or genre.";
-      buildFilters();
-      render();
+      throw lastErr;
     }
 
-    const fallback = "data:image/svg+xml;utf8," + encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="300" height="420" fill="#2a2a35"/><text x="150" y="215" fill="#888" font-family="sans-serif" font-size="16" text-anchor="middle">No poster</text></svg>');
-
-    function stars(r) {
-      if (r == null) return `<small class="opacity-75">No rating</small>`;
-      const full = Math.round(r);
-      return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r.toFixed(1)}</small>`;
-    }
-
-    function buildFilters() {
-      activeGenre = "All";
-      const genres = ["All", ...new Set(animeData.flatMap(a => a.genre))];
-      filterBox.innerHTML = genres.map(g =>
-        `<button class="btn btn-filter ${g === "All" ? "active" : ""}" data-genre="${esc(g)}">${esc(g)}</button>`).join("");
-    }
-
-    filterBox.addEventListener("click", e => {
-      if (!e.target.dataset.genre) return;
-      activeGenre = e.target.dataset.genre;
-      filterBox.querySelectorAll(".btn-filter").forEach(b => b.classList.toggle("active", b === e.target));
-      render();
-    });
-
-    let timer;
-    searchBox.addEventListener("input", () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => loadAnime(searchBox.value.trim()), 500);
-    });
-
-    function render() {
-      let html = "";
-      let count = 0;
-
-      for (let i = 0; i < animeData.length; i++) {
-        const a = animeData[i];
-        const matchGenre = activeGenre === "All" || a.genre.includes(activeGenre);
-        if (!matchGenre) continue;
-        count++;
-
-        html += `
-    <div class="col">
-      <div class="card anime-card h-100" role="button" tabindex="0" data-index="${i}">
+    function cardHtml(a) {
+      return `
+      <div class="card anime-card h-100" role="button" tabindex="0" data-id="${a.id}">
         <div class="poster-wrap">
           <img src="${esc(a.image)}" alt="${esc(a.title)} poster" class="poster-img" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
         </div>
         <div class="card-body">
           <h3 class="anime-title">${esc(a.title)}</h3>
-          <div class="mb-2">${a.genre.map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ")}</div>
+          <div class="mb-2">${a.genre.slice(0, 2).map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ")}</div>
           <p class="anime-meta mb-1">${esc(a.year)} &middot; ${esc(a.episodes)} ep</p>
           <p class="stars mb-0">${stars(a.rating)}</p>
         </div>
-      </div>
-    </div>`;
-      }
-      grid.innerHTML = html;
-      emptyMsg.classList.toggle("d-none", count > 0);
+      </div>`;
     }
 
-    const modalEl = document.getElementById("animeModal");
+    function rowHtml(row, items) {
+      return `
+      <div class="row-block mb-5">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="row-title">${esc(row.title)}</h2>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-arrow" data-scroll="-1" aria-label="Scroll ${esc(row.title)} left">&lsaquo;</button>
+            <button class="btn btn-arrow" data-scroll="1" aria-label="Scroll ${esc(row.title)} right">&rsaquo;</button>
+            <button class="btn btn-viewall" data-view="${row.id}">View All</button>
+          </div>
+        </div>
+        <div class="scroll-row d-flex flex-nowrap gap-3 overflow-auto">
+          ${items.map(a => `<div class="scroll-card">${cardHtml(a)}</div>`).join("")}
+        </div>
+      </div>`;
+    }
+
+    let requestId = 0;          
+    let currentCat = null;     
+    let listItems = [];
+    let listPage = 1;
+    let listHasNext = false;
+
+    function showRowsView() {
+      rowsBox.classList.remove("d-none");
+      listBox.classList.add("d-none");
+    }
+    function showListView() {
+      rowsBox.classList.add("d-none");
+      listBox.classList.remove("d-none");
+    }
+    function setMessage(text) {
+      emptyMsg.textContent = text || "";
+      emptyMsg.classList.toggle("d-none", !text);
+    }
+
+    async function loadRows() {
+      const my = ++requestId;
+      const genre = genreSel.value;
+      const status = statusSel.value;
+      showRowsView();
+      setMessage("");
+      rowsBox.innerHTML = spinner;
+
+      const rows = ROWS.filter(r => !(status && r.status && r.status !== status));
+      const query = "query {" + rows.map(r =>
+        `${r.id}: Page(page: 1, perPage: 15) { media(${mediaArgs(r, genre, status)}) { ${FIELDS} } }`
+      ).join("\n") + "}";
+
+      try {
+        const data = await gql(query);
+        if (my !== requestId) return;
+        let html = "";
+        rows.forEach(r => {
+          const items = data[r.id].media.map(mapAnime);
+          if (items.length) html += rowHtml(r, items);
+        });
+        rowsBox.innerHTML = html;
+        if (!html) setMessage("No anime found. Try another genre or status.");
+      } catch (err) {
+        if (my !== requestId) return;
+        rowsBox.innerHTML = "";
+        setMessage(`Couldn't load anime (${err.message}). Wait a few seconds and try again.`);
+      }
+    }
+
+    async function loadList(reset) {
+      const my = ++requestId;
+      const genre = genreSel.value;
+      const status = statusSel.value;
+      const search = searchBox.value.trim();
+      const cat = search ? { sort: "SEARCH_MATCH" } : currentCat;
+
+      showListView();
+      setMessage("");
+      listTitle.textContent = search ? `Results for “${search}”` : currentCat.title;
+
+      if (reset) {
+        listPage = 1;
+        listItems = [];
+        grid.innerHTML = `<div class="col-12">${spinner}</div>`;
+        loadMoreBtn.classList.add("d-none");
+      }
+
+      const query = `query { Page(page: ${listPage}, perPage: 30) {
+        pageInfo { hasNextPage }
+        media(${mediaArgs(cat, genre, status, search)}) { ${FIELDS} } } }`;
+
+      try {
+        const data = await gql(query);
+        if (my !== requestId) return;
+        const items = data.Page.media.map(mapAnime);
+        listHasNext = data.Page.pageInfo.hasNextPage;
+        listItems = listItems.concat(items);
+        renderList();
+      } catch (err) {
+        if (my !== requestId) return;
+        if (reset) grid.innerHTML = "";
+        else listPage--;
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = "Load more";
+        setMessage(`Couldn't load anime (${err.message}). Wait a few seconds and try again.`);
+      }
+    }
+
+    function renderList() {
+      grid.innerHTML = listItems.map(a => `<div class="col">${cardHtml(a)}</div>`).join("");
+      setMessage(listItems.length ? "" : "No anime found. Try another title, genre or status.");
+      loadMoreBtn.classList.toggle("d-none", !listHasNext);
+      loadMoreBtn.disabled = false;
+      loadMoreBtn.textContent = "Load more";
+    }
+
+    function refresh() {
+      if (searchBox.value.trim()) {
+        currentCat = null;
+        loadList(true);
+      } else if (currentCat) {
+        loadList(true);
+      } else {
+        loadRows();
+      }
+    }
+
+    genreSel.addEventListener("change", refresh);
+    statusSel.addEventListener("change", refresh);
+
+    let timer;
+    searchBox.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(refresh, 500);
+    });
+
+    backBtn.addEventListener("click", () => {
+      currentCat = null;
+      searchBox.value = "";
+      loadRows();
+    });
+
+    loadMoreBtn.addEventListener("click", () => {
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = "Loading...";
+      listPage++;
+      loadList(false);
+    });
+
+    rowsBox.addEventListener("click", e => {
+      const arrow = e.target.closest("[data-scroll]");
+      if (arrow) {
+        const scroller = arrow.closest(".row-block").querySelector(".scroll-row");
+        scroller.scrollBy({ left: Number(arrow.dataset.scroll) * scroller.clientWidth * 0.8, behavior: "smooth" });
+        return;
+      }
+      const view = e.target.closest("[data-view]");
+      if (view) {
+        currentCat = ROWS.find(r => r.id === view.dataset.view);
+        searchBox.value = "";
+        loadList(true);
+        $("anime-list").scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+      const c = e.target.closest(".anime-card");
+      if (c) openModal(c);
+    });
+
+    grid.addEventListener("click", e => { const c = e.target.closest(".anime-card"); if (c) openModal(c); });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      const c = e.target.closest?.(".anime-card"); if (c) openModal(c);
+    });
+
+    const modalEl = $("animeModal");
     const modal = new bootstrap.Modal(modalEl);
-    const trailerFrame = document.getElementById("modalTrailer");
-    const trailerSection = document.getElementById("trailerSection");
+    const trailerFrame = $("modalTrailer");
+    const trailerSection = $("trailerSection");
 
     function openModal(card) {
-      const a = animeData[card.dataset.index];
-      document.getElementById("modalTitle").textContent = a.title;
-      const img = document.getElementById("modalImg");
+      const a = store.get(Number(card.dataset.id));
+      if (!a) return;
+      $("modalTitle").textContent = a.title;
+      const img = $("modalImg");
       img.onerror = () => { img.onerror = null; img.src = fallback; };
       img.src = a.image || fallback;
       img.alt = a.title + " poster";
-      document.getElementById("modalBadges").innerHTML = a.genre.map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ");
-      document.getElementById("modalYear").textContent = a.year;
-      document.getElementById("modalEps").textContent = a.episodes;
-      document.getElementById("modalStudio").textContent = a.studio;
-      document.getElementById("modalStatus").textContent = a.status;
-      document.getElementById("modalRating").innerHTML = stars(a.rating);
-      document.getElementById("modalSynopsis").textContent = a.synopsis;
+      $("modalBadges").innerHTML = a.genre.map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ");
+      $("modalYear").textContent = a.year;
+      $("modalEps").textContent = a.episodes;
+      $("modalStudio").textContent = a.studio;
+      $("modalStatus").textContent = a.status;
+      $("modalRating").innerHTML = stars(a.rating);
+      $("modalSynopsis").textContent = a.synopsis;
 
       trailerSection.classList.toggle("d-none", !a.trailer);
       trailerFrame.src = a.trailer || "";
@@ -296,13 +467,7 @@
 
     modalEl.addEventListener("hidden.bs.modal", () => { trailerFrame.src = ""; });
 
-    grid.addEventListener("click", e => { const c = e.target.closest(".anime-card"); if (c) openModal(c); });
-    grid.addEventListener("keydown", e => {
-      if (e.key !== "Enter") return;
-      const c = e.target.closest(".anime-card"); if (c) openModal(c);
-    });
-
-    loadAnime();
+    loadRows();
   </script>
 </body>
 
