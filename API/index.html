@@ -116,7 +116,7 @@
     crossorigin="anonymous"></script>
 
   <script>
-    // apiaiaia and functions like filters etc
+    // anilist api and functions etc
     const API = "https://graphql.anilist.co";
     const $ = id => document.getElementById(id);
 
@@ -176,7 +176,6 @@
       return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r.toFixed(1)}</small>`;
     }
 
-    // anilist
     const store = new Map();
 
     const FIELDS = `
@@ -193,6 +192,7 @@
       studios(isMain: true) { nodes { name } }
       trailer { id site }`;
 
+    // turn AniList's format into the shape the cards use
     function mapAnime(a) {
       let trailer = null;
       if (a.trailer?.id) {
@@ -211,7 +211,7 @@
         year: a.seasonYear ?? a.startDate?.year ?? "?",
         episodes: a.episodes ?? "?",
         studio: a.studios?.nodes?.[0]?.name ?? "Unknown",
-        rating: a.averageScore ? a.averageScore / 20 : null, // AniList score is out of 100, stars are out of 5
+        rating: a.averageScore ? a.averageScore / 20 : null, 
         status: STATUS_LABEL[a.status] || "Unknown",
         synopsis: synopsis || "No synopsis available.",
         image: a.coverImage?.extraLarge || a.coverImage?.large || "",
@@ -260,7 +260,7 @@
         </div>
         <div class="card-body">
           <h3 class="anime-title">${esc(a.title)}</h3>
-          <div class="mb-2">${a.genre.slice(0, 2).map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ")}</div>
+          <div class="d-flex flex-wrap gap-1 mb-3">${a.genre.slice(0, 2).map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ")}</div>
           <p class="anime-meta mb-1">${esc(a.year)} &middot; ${esc(a.episodes)} ep</p>
           <p class="stars mb-0">${stars(a.rating)}</p>
         </div>
@@ -278,14 +278,14 @@
             <button class="btn btn-viewall" data-view="${row.id}">View All</button>
           </div>
         </div>
-        <div class="scroll-row d-flex flex-nowrap gap-3 overflow-auto">
+        <div class="scroll-row d-flex flex-nowrap gap-4 overflow-auto">
           ${items.map(a => `<div class="scroll-card">${cardHtml(a)}</div>`).join("")}
         </div>
       </div>`;
     }
 
-    let requestId = 0;          
-    let currentCat = null;     
+    let requestId = 0;           
+    let currentCat = null;      
     let listItems = [];
     let listPage = 1;
     let listHasNext = false;
