@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AniKuro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark vault-nav sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#home">ANIKURO</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+        aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#anime-list">Anime List</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <header id="home" class="hero d-flex align-items-center text-white text-center">
+    <div class="container">
+      <h1 class="fw-bold hero-title">ANIKURO</h1>
+      <p class="fs-5 opacity-75 mb-4">Your shelf of series worth watching. Pick a poster to see the story.</p>
+      <a href="#anime-list" class="btn btn-vault btn-lg px-5">Browse Anime</a>
+    </div>
+  </header>
+
+  <section id="anime-list" class="container py-5">
+    <div class="row g-3 align-items-center mb-4">
+      <div class="col-lg-8">
+        <div class="d-flex flex-wrap gap-2" id="filter-buttons"></div>
+      </div>
+      <div class="col-lg-4">
+        <input type="search" id="search" class="form-control search-box" placeholder="Search a title...">
+      </div>
+    </div>
+
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="anime-grid"></div>
+    <p id="empty" class="text-center text-white-50 mt-5 d-none">No anime found. Try another title or genre.</p>
+  </section>
+
+  <div class="modal fade" id="animeModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content about-modal text-white">
+        <div class="modal-header border-0 pb-0">
+          <h2 class="modal-title fw-bold fs-4" id="modalTitle"></h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-4">
+            <div class="col-md-5"><img id="modalImg" src="" alt="" class="img-fluid rounded poster-img"></div>
+            <div class="col-md-7">
+              <div id="modalBadges" class="mb-3"></div>
+              <p class="mb-1"><strong>Year:</strong> <span id="modalYear"></span></p>
+              <p class="mb-1"><strong>Episodes:</strong> <span id="modalEps"></span></p>
+              <p class="mb-1"><strong>Studio:</strong> <span id="modalStudio"></span></p>
+              <p class="mb-1"><strong>Status:</strong> <span id="modalStatus"></span></p>
+              <p class="mb-3"><strong>Rating:</strong> <span class="stars" id="modalRating"></span></p>
+              <h3 class="fs-6 fw-semibold">Synopsis</h3>
+              <p class="opacity-75 mb-0" id="modalSynopsis"></p>
+            </div>
+          </div>
+
+          <div id="trailerSection" class="mt-4 d-none">
+            <h3 class="fs-6 fw-semibold">Trailer</h3>
+            <div class="ratio ratio-16x9">
+              <iframe id="modalTrailer" src="" title="Anime trailer" allowfullscreen
+                allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="about" class="container text-center text-white py-5">
+    <h2 class="fw-bold">About</h2>
+    <p class="opacity-75 mx-auto" style="max-width: 560px;">AniKuro is a small catalog built with Bootstrap 5 and
+      JavaScript. Every card on this page is loaded live from the Jikan API, which serves anime data from MyAnimeList.</p>
+  </section>
+
+  <footer class="vault-footer text-center text-white py-4">
+    <p class="fw-semibold mb-1">Watch more. Skip less.</p>
+    <p class="opacity-50 mb-0" style="font-size: 13px;">Designed by: Chastepogi123</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+
+  <script>
+    //apiiiiiiaiaiaiai
+    const API = "https://api.jikan.moe/v4";
+    let animeData = [];
+    let requestId = 0; 
+
+    const grid = document.getElementById("anime-grid");
+    const filterBox = document.getElementById("filter-buttons");
+    const searchBox = document.getElementById("search");
+    const emptyMsg = document.getElementById("empty");
+    let activeGenre = "All";
+
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    function mapAnime(a) {
+      return {
+        title: a.title_english || a.title,
+        genre: (a.genres || []).map(g => g.name),
+        year: a.year ?? a.aired?.prop?.from?.year ?? "?",
+        episodes: a.episodes ?? "?",
+        studio: a.studios?.[0]?.name ?? "Unknown",
+        rating: a.score ? a.score / 2 : null, // MAL score is out of 10, stars are out of 5
+        status: a.status || "Unknown",
+        synopsis: a.synopsis || "No synopsis available.",
+        image: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "",
+        trailer: a.trailer?.embed_url ? a.trailer.embed_url.replace("autoplay=1", "autoplay=0") : null
+      };
+    }
+
+    async function loadAnime(query = "") {
+      const myRequest = ++requestId;
+      grid.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+      emptyMsg.classList.add("d-none");
+
+      const url = query
+        ? `${API}/anime?q=${encodeURIComponent(query)}&limit=24&sfw=true`
+        : `${API}/top/anime?limit=24`;
+
+      let failed = false;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const json = await res.json();
+        if (myRequest !== requestId) return; // a newer search replaced this one
+        animeData = json.data.map(mapAnime);
+      } catch (err) {
+        if (myRequest !== requestId) return;
+        console.error(err);
+        animeData = [];
+        failed = true;
+      }
+
+      emptyMsg.textContent = failed
+        ? "Couldn't load anime. Wait a few seconds and try again."
+        : "No anime found. Try another title or genre.";
+      buildFilters();
+      render();
+    }
+
+    const fallback = "data:image/svg+xml;utf8," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420"><rect width="300" height="420" fill="#2a2a35"/><text x="150" y="215" fill="#888" font-family="sans-serif" font-size="16" text-anchor="middle">No poster</text></svg>');
+
+    function stars(r) {
+      if (r == null) return `<small class="opacity-75">No rating</small>`;
+      const full = Math.round(r);
+      return "★".repeat(full) + "☆".repeat(5 - full) + ` <small class="opacity-75">${r.toFixed(1)}</small>`;
+    }
+
+    function buildFilters() {
+      activeGenre = "All";
+      const genres = ["All", ...new Set(animeData.flatMap(a => a.genre))];
+      filterBox.innerHTML = genres.map(g =>
+        `<button class="btn btn-filter ${g === "All" ? "active" : ""}" data-genre="${esc(g)}">${esc(g)}</button>`).join("");
+    }
+
+    filterBox.addEventListener("click", e => {
+      if (!e.target.dataset.genre) return;
+      activeGenre = e.target.dataset.genre;
+      filterBox.querySelectorAll(".btn-filter").forEach(b => b.classList.toggle("active", b === e.target));
+      render();
+    });
+
+    let timer;
+    searchBox.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => loadAnime(searchBox.value.trim()), 500);
+    });
+
+    function render() {
+      let html = "";
+      let count = 0;
+
+      for (let i = 0; i < animeData.length; i++) {
+        const a = animeData[i];
+        const matchGenre = activeGenre === "All" || a.genre.includes(activeGenre);
+        if (!matchGenre) continue;
+        count++;
+
+        html += `
+    <div class="col">
+      <div class="card anime-card h-100" role="button" tabindex="0" data-index="${i}">
+        <div class="poster-wrap">
+          <img src="${esc(a.image)}" alt="${esc(a.title)} poster" class="poster-img" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
+        </div>
+        <div class="card-body">
+          <h3 class="anime-title">${esc(a.title)}</h3>
+          <div class="mb-2">${a.genre.map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ")}</div>
+          <p class="anime-meta mb-1">${esc(a.year)} &middot; ${esc(a.episodes)} ep</p>
+          <p class="stars mb-0">${stars(a.rating)}</p>
+        </div>
+      </div>
+    </div>`;
+      }
+      grid.innerHTML = html;
+      emptyMsg.classList.toggle("d-none", count > 0);
+    }
+
+    const modalEl = document.getElementById("animeModal");
+    const modal = new bootstrap.Modal(modalEl);
+    const trailerFrame = document.getElementById("modalTrailer");
+    const trailerSection = document.getElementById("trailerSection");
+
+    function openModal(card) {
+      const a = animeData[card.dataset.index];
+      document.getElementById("modalTitle").textContent = a.title;
+      const img = document.getElementById("modalImg");
+      img.onerror = () => { img.onerror = null; img.src = fallback; };
+      img.src = a.image || fallback;
+      img.alt = a.title + " poster";
+      document.getElementById("modalBadges").innerHTML = a.genre.map(g => `<span class="badge badge-genre">${esc(g)}</span>`).join(" ");
+      document.getElementById("modalYear").textContent = a.year;
+      document.getElementById("modalEps").textContent = a.episodes;
+      document.getElementById("modalStudio").textContent = a.studio;
+      document.getElementById("modalStatus").textContent = a.status;
+      document.getElementById("modalRating").innerHTML = stars(a.rating);
+      document.getElementById("modalSynopsis").textContent = a.synopsis;
+
+      trailerSection.classList.toggle("d-none", !a.trailer);
+      trailerFrame.src = a.trailer || "";
+
+      modal.show();
+    }
+
+    modalEl.addEventListener("hidden.bs.modal", () => { trailerFrame.src = ""; });
+
+    grid.addEventListener("click", e => { const c = e.target.closest(".anime-card"); if (c) openModal(c); });
+    grid.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      const c = e.target.closest(".anime-card"); if (c) openModal(c);
+    });
+
+    loadAnime();
+  </script>
+</body>
+
+</html>
