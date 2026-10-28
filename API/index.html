@@ -72,6 +72,7 @@
             </div>
           </div>
 
+          <!--Trailer player-->
           <div id="trailerSection" class="mt-4 d-none">
             <h3 class="fs-6 fw-semibold">Trailer</h3>
             <div class="ratio ratio-16x9">
@@ -87,7 +88,7 @@
   <section id="about" class="container text-center text-white py-5">
     <h2 class="fw-bold">About</h2>
     <p class="opacity-75 mx-auto" style="max-width: 560px;">AniKuro is a small catalog built with Bootstrap 5 and
-      JavaScript. Every card on this page is loaded live from the Jikan API, which serves anime data from MyAnimeList.</p>
+      JavaScript. Every card on this page is loaded live from the AniList API.</p>
   </section>
 
   <footer class="vault-footer text-center text-white py-4">
@@ -100,8 +101,29 @@
     crossorigin="anonymous"></script>
 
   <script>
-    //apiiiiiiaiaiaiai
-    const API = "https://api.jikan.moe/v4";
+    // apiiiaiaiai
+    const API = "https://graphql.anilist.co";
+
+  
+    const QUERY = `
+      query ($search: String, $sort: [MediaSort]) {
+        Page(page: 1, perPage: 24) {
+          media(type: ANIME, search: $search, sort: $sort, isAdult: false) {
+            title { romaji english }
+            genres
+            seasonYear
+            startDate { year }
+            episodes
+            status
+            averageScore
+            description(asHtml: false)
+            coverImage { extraLarge large }
+            studios(isMain: true) { nodes { name } }
+            trailer { id site }
+          }
+        }
+      }`;
+
     let animeData = [];
     let requestId = 0; 
 
@@ -114,18 +136,36 @@
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+    const STATUS = {
+      FINISHED: "Completed",
+      RELEASING: "Ongoing",
+      NOT_YET_RELEASED: "Not yet released",
+      CANCELLED: "Cancelled",
+      HIATUS: "On hiatus"
+    };
+
     function mapAnime(a) {
+      let trailer = null;
+      if (a.trailer?.id) {
+        if (a.trailer.site === "youtube") trailer = `https://www.youtube.com/embed/${a.trailer.id}`;
+        else if (a.trailer.site === "dailymotion") trailer = `https://www.dailymotion.com/embed/video/${a.trailer.id}`;
+      }
+      const synopsis = (a.description || "")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]*>/g, "")
+        .trim();
+
       return {
-        title: a.title_english || a.title,
-        genre: (a.genres || []).map(g => g.name),
-        year: a.year ?? a.aired?.prop?.from?.year ?? "?",
+        title: a.title.english || a.title.romaji,
+        genre: a.genres || [],
+        year: a.seasonYear ?? a.startDate?.year ?? "?",
         episodes: a.episodes ?? "?",
-        studio: a.studios?.[0]?.name ?? "Unknown",
-        rating: a.score ? a.score / 2 : null, // MAL score is out of 10, stars are out of 5
-        status: a.status || "Unknown",
-        synopsis: a.synopsis || "No synopsis available.",
-        image: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "",
-        trailer: a.trailer?.embed_url ? a.trailer.embed_url.replace("autoplay=1", "autoplay=0") : null
+        studio: a.studios?.nodes?.[0]?.name ?? "Unknown",
+        rating: a.averageScore ? a.averageScore / 20 : null, // AniList score is out of 100, stars are out of 5
+        status: STATUS[a.status] || "Unknown",
+        synopsis: synopsis || "No synopsis available.",
+        image: a.coverImage?.extraLarge || a.coverImage?.large || "",
+        trailer
       };
     }
 
@@ -134,26 +174,37 @@
       grid.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
       emptyMsg.classList.add("d-none");
 
-      const url = query
-        ? `${API}/anime?q=${encodeURIComponent(query)}&limit=24&sfw=true`
-        : `${API}/top/anime?limit=24`;
+      const variables = query
+        ? { search: query, sort: ["SEARCH_MATCH"] }
+        : { sort: ["POPULARITY_DESC"] };
 
       let failed = false;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const json = await res.json();
-        if (myRequest !== requestId) return; // a newer search replaced this one
-        animeData = json.data.map(mapAnime);
-      } catch (err) {
-        if (myRequest !== requestId) return;
-        console.error(err);
-        animeData = [];
-        failed = true;
+      let errorText = "";
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const res = await fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ query: QUERY, variables })
+          });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const json = await res.json();
+          if (myRequest !== requestId) return; // a newer search replaced this one
+          animeData = json.data.Page.media.map(mapAnime);
+          failed = false;
+          break;
+        } catch (err) {
+          if (myRequest !== requestId) return;
+          console.error(err);
+          animeData = [];
+          failed = true;
+          errorText = err.message;
+          if (attempt === 1) await new Promise(r => setTimeout(r, 2000));
+        }
       }
 
       emptyMsg.textContent = failed
-        ? "Couldn't load anime. Wait a few seconds and try again."
+        ? `Couldn't load anime (${errorText}). Wait a few seconds and try again.`
         : "No anime found. Try another title or genre.";
       buildFilters();
       render();
